@@ -6,6 +6,41 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.types import String
 import requests
+
+
+from_ym=input("\nEnter the from date(YYYY-MM):")#'2012-04'
+to_ym=input("\nEnter the to date(YYYY-MM):")#'2020-05'
+key_words=input("\n Enter the keywords:")#'mobile camera'
+no_of_data=input("\nEnter the no of records:")
+
+x = from_ym.split("-")
+y = to_ym.split("-") 
+print(x,y)
+count = 0
+start_year=int(x[0])
+start_month=int(x[1])
+end_month=int(y[1])
+end_year=int(y[0])
+ym_start= 12*start_year + start_month - 1
+ym_end= 12*end_year + end_month+1
+
+
+k=0
+temp={}
+for i in range(ym_start,ym_end):
+    y,m=divmod(i,12)
+    mon=m+1
+    to_date=str(y)+'-'+str(mon)+'-01'
+    temp[k]=to_date
+    if k>=1 :
+        from_date=temp[k-1]
+        
+        patent_search(from_date,to_date,key_words,no_of_data)
+    k=k+1
+
+    #print(from_date,to_date)b 
+    
+#patent_search('2020-01-01','2021-05-01','mobile camera',1000)
 def patent_search(more_date,less_date,test,no_of_results):
     no_of_results=str(no_of_results)
     url="https://api.patentsview.org/patents/query?"
@@ -28,20 +63,26 @@ def extract_data(url_link):
     #print(y)
 
 def write_to_csv(json_data):
-    patents_data = json_data['patents']
     data_file = open('patents_data_file.csv', 'w+')
+    data_file.close()
+    patents_data = json_data['patents']
+    data_file = open('patents_data_file.csv', 'a+')
     csv_writer = csv.writer(data_file)
-    count = 0
+    global count
+    
+    
     for p in patents_data:
         if count == 0:
             header = p.keys()
             csv_writer.writerow(header)
             count += 1
+            file_hits=1
+        
         csv_writer.writerow(p.values())
     
     data_file.close()   
 
-patent_search('2019-01-01','2021-01-02','mobile camera',100)
+
 
 dbname="sample_test" 
 user="postgres" 
