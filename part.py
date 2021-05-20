@@ -39,6 +39,8 @@ def write_to_csv(json_data):
     
     data_file.close()   
 
+patent_search('2019-01-01','2021-01-02','mobile camera')
+
 dbname="sample_test" 
 user="postgres" 
 password="goodlife"
