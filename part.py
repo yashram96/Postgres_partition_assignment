@@ -6,17 +6,15 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.types import String
 import requests
-def patent_search(more_date,less_date,test,no_of_results):
-    no_of_results=str(no_of_results)
+def patent_search(more_date,less_date,test):
     url="https://api.patentsview.org/patents/query?"
     form="&f=[%22patent_number%22,%22patent_date%22,%22patent_title%22]"
     greater="&q={%22_and%22:%20[{%22_gte%22:{%22patent_date%22:%22"
     lessthan="%22}},{%22_lte%22:{%22patent_date%22:%22"
     find_text="%22}},{%22_text_any%22:{%22patent_abstract%22:%22"
     endlog="%22}}]}"
-    pag_nat="&o={%22page%22:2,%22per_page%22:"+no_of_results+"}"
     space_rep=test.replace(" ",'%20')
-    final_url=url+form+greater+more_date+lessthan+less_date+find_text+space_rep+endlog+pag_nat
+    final_url=url+form+greater+more_date+lessthan+less_date+find_text+space_rep+endlog
     extract_data(final_url)
 
 def extract_data(url_link):
@@ -41,7 +39,7 @@ def write_to_csv(json_data):
     
     data_file.close()   
 
-patent_search('2019-01-01','2021-01-02','mobile camera')
+patent_search('2019-01-01','2021-01-02','mobile camera',100)
 
 dbname="sample_test" 
 user="postgres" 
