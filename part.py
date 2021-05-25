@@ -44,7 +44,7 @@ for i in range(ym_start,ym_end):
 
     
     
-#example: patent_search('2020-01-01','2021-05-01','mobile camera',1000)
+#example: patent_search('2020-01','2021-05','mobile camera',1000)
 #This function forms the api with fields that are requested and call another function to extract_data
 def patent_search(more_date,less_date,test,no_of_results):
     no_of_results=str(no_of_results)
