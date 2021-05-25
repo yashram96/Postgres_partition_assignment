@@ -52,20 +52,28 @@ before insert on patents_data for each row execute procedure patents_data_functi
 
 
 
-create or replace function table_name_send() returns void as 
+create or replace function table_name_send1() returns table(item_table varchar,mindate date,maxdate date,total_count integer) as 
 $$ 
 declare
 items record;
 min_date record;
 begin
-RAISE NOTICE ' TABLE NAME              MINIMUM DATE     MAXIMUM DATE      ROW COUNT';
 FOR items IN SELECT * FROM information_schema.tables where table_schema='public' order by table_name asc LOOP
         for min_date in execute format('select min(patent_date),max(patent_date),count(*) from '|| items.table_name) loop
-            
-            RAISE NOTICE ' % ,    % ,      %,      %', items.table_name ,min_date.min,min_date.max,min_date.count;
+            item_table:=items.table_name ;
+            mindate:=min_date.min;
+            maxdate:=min_date.max;
+            total_count:=min_date.count;
+            return next ;
             end loop;
     END LOOP;
 
---perform print(unnest(table_ids));
+
 
 end $$ language plpgsql;
+
+
+drop function table_name_send1;
+
+
+select * from table_name_send1();
