@@ -8,6 +8,7 @@ create table emp_gen.employee_data(
 
 );
 
+
 -- function to generate random employee data
 CREATE OR REPLACE FUNCTION generate_emp_data(p_rows int) RETURNS void AS
 $$
@@ -20,38 +21,62 @@ declare
   V_emai_id varchar;
   D_doj date;
   I_null_cal integer;
+  I_man_id integer;
+  I_man_id_2 integer;
+  k_rows integer;
+  I_low integer;
+  I_arr_emp int[];
 BEGIN
-
-select count(*) into null_cal from emp_gen.employee_data ;
+k_rows:= 1;
+select count(*)  into I_null_cal from emp_gen.employee_data ;
 --check if the table is empty 
 --if table is empty inserts one row of ceo
-if null_cal=0 then
+if I_null_cal=0 then
     INSERT INTO emp_gen.employee_data(v_name,D_date_of_joining,V_email) values ('1_RAMA','2001-05-08','rama@email.com');
-    p_rows:=p_rows-1;
+    k_rows:=2;
 end if;
+<<for_loop>> begin
 
 --iterate for generating p_rows times the employee data rows
-for x in 1..p_rows loop
+for x in k_rows..p_rows loop
       --find max serial no of employee id
       select max(I_Emp_id)  into V_max_s from emp_gen.employee_data;
-      --New employee id is created in sequence
-      INSERT INTO emp_gen.employee_data(I_Emp_id)
-                  SELECT * FROM generate_series(V_max_s+1, V_max_s+1);
-      --Now again we select the max employee id to know the employee id inserted in previous step
-      select max(I_Emp_id)  into I_con_name from emp_gen.employee_data;
+      if V_max_s-100 <=0 then 
+            I_low:=1;
+      else
+            I_low:= V_max_s-100;
+      end if;
+
+      SELECT floor(random() * (abs((V_max_s+10)-(abs(I_low))+1)) + (abs(I_low)))::int into I_man_id;
       --generates random name string of 5 to 10 chars
       SELECT  array_to_string(ARRAY(SELECT chr((97 + round(random() * 25)) :: integer)
                                     FROM generate_series(5,10)), '') into V_rand_name;
-      -- forms the employee name in the format if emp_id_random_string_char
-      emp_name:=I_con_name||'_'||V_rand_name;
+      V_emp_name:=V_max_s+1||'_'||V_rand_name;
       --formats the emailid
-      emai_id:=V_rand_name||'@email.com';
+      V_emai_id:=V_rand_name||'@email.com';
       --generate random date of joining fom 2000-01-01 to yesterday
       select  NOW() +random() * ( timestamp '2000-01-01' -(current_date - INTERVAL '1 day') )into D_doj ;
-      --now update the employee data in the row with doj,name, email_id
-      execute 'update  emp_gen.employee_data set v_name=$1,D_date_of_joining=$2,V_email=$3 where I_Emp_id =$4 ' using V_emp_name,D_doj,V_emai_id,I_con_name::integer;
-      --raise notice '%',doj;
-end loop;
+     
+    <<exceptions>> begin
+      --Insert the employee data
+      EXECUTE 'insert into emp_gen.employee_data values ($1,$2,$3,$4,$5)' using V_max_s+1, V_emp_name,D_doj,V_emai_id,I_man_id ; 
+      --If foreign_key_violation occurs for manager id , then exception is handled 
+      exception when foreign_key_violation then 
+        -- make array of existing employees and select random employee id and make it as manager id 
+        select array(SELECT (I_Emp_id) FROM emp_gen.employee_data ) into I_arr_emp;
+        select I_arr_emp[floor((random()*3))::int] into I_man_id_2;
+        x=x-1;
+        -- Random name, email for manager id 
+        V_max_s:=I_man_id;
+        V_emp_name:=V_max_s||'_'||V_rand_name;
+        V_emai_id:=V_rand_name||'@email.com';
+        --Insert the exceptional data vlaues for manager id 
+        EXECUTE 'insert into emp_gen.employee_data values ($1,$2,$3,$4,$5)' using V_max_s, V_emp_name,D_doj,V_emai_id,I_man_id_2 ; 
 
-END;
+      end;
+
+end loop;
+end;
+end;
 $$ LANGUAGE PLPGSQL;
+
