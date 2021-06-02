@@ -47,7 +47,7 @@ for x in k_rows..p_rows loop
             I_low:= V_max_s-100;
       end if;
 
-      SELECT floor(random() * (abs((V_max_s+10)-(abs(I_low))+1)) + (abs(I_low)))::int into I_man_id;
+      SELECT ceiling(random() * (abs((V_max_s+10)-(abs(I_low)))) + (abs(I_low))+1)::int into I_man_id;
       --generates random name string of 5 to 10 chars
       SELECT  array_to_string(ARRAY(SELECT chr((97 + round(random() * 25)) :: integer)
                                     FROM generate_series(5,10)), '') into V_rand_name;
@@ -64,14 +64,14 @@ for x in k_rows..p_rows loop
       exception when foreign_key_violation then 
         -- make array of existing employees and select random employee id and make it as manager id 
         select array(SELECT (I_Emp_id) FROM emp_gen.employee_data ) into I_arr_emp;
-        select I_arr_emp[floor((random()*3))::int] into I_man_id_2;
-        x=x-1;
+        select I_arr_emp[ceiling((random()*3)+1)::int] into I_man_id_2;
         -- Random name, email for manager id 
         V_max_s:=I_man_id;
         V_emp_name:=V_max_s||'_'||V_rand_name;
         V_emai_id:=V_rand_name||'@email.com';
         --Insert the exceptional data vlaues for manager id 
-        EXECUTE 'insert into emp_gen.employee_data values ($1,$2,$3,$4,$5)' using V_max_s, V_emp_name,D_doj,V_emai_id,I_man_id_2 ; 
+        EXECUTE 'insert into emp_gen.employee_data values ($1,$2,$3,$4,$5)' using V_max_s, V_emp_name,D_doj,V_emai_id,I_man_id_2 ;
+        continue; 
 
       end;
 
@@ -79,4 +79,3 @@ end loop;
 end;
 end;
 $$ LANGUAGE PLPGSQL;
-
