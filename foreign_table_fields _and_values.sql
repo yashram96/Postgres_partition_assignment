@@ -8,7 +8,7 @@ create table foreign_field.employee_table(
 
 CREATE TABLE foreign_field.employee_field_values(
   S_id serial primary key,
-  I_field_id int REFERENCES foreign_field.employee_table(id),
+  I_field_id int REFERENCES foreign_field.employee_table(S_id),
   V_field_values varchar
   
 );
